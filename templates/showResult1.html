@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>인터뷰 분석 결과</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <style>
+            .loader {
+                  border: 5px solid #f3f3f3;
+                  border-top: 5px solid #3498db;
+                  border-radius: 50%;
+                  width: 50px;
+                  height: 50px;
+                  animation: spin 1s linear infinite;
+                  margin: 20px auto;
+            }
+
+            @keyframes spin {
+                  0% {
+                        transform: rotate(0deg);
+                  }
+
+                  100% {
+                        transform: rotate(360deg);
+                  }
+            }
+      </style>
+</head>
+
+<body>
+      <div class="container mt-4">
+            <h4 class="mb-3">인터뷰 분석 결과</h4>
+            <hr>
+            <h2 class="mb-3">대답 분석</h2>
+            <div class="loader"></div>
+            <div id="parent" class="row" style="display:none;"></div>
+
+            <div class="mt-4">
+                  <form action="/show_result2" method="post">
+                        <button id="nextVideo" class="btn btn-primary" style="display:none;">영상 분석 결과 보기</button>
+                  </form>
+            </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+      <script>
+            let answerAnalysisReady = false;
+            let videoAnalysisReady = false;
+            let nextVideo = document.getElementById('nextVideo');
+
+            function reset() {
+                  let parent = document.getElementById('parent');
+                  let count = parseInt(sessionStorage.getItem("questionCount"));
+                  let questions = JSON.parse(sessionStorage.getItem("questions"));
+                  let answers = JSON.parse(sessionStorage.getItem("answers"));
+
+                  let readyCount = 0;
+
+                  for (let i = 0; i < count; i++) {
+                        let newDiv = document.createElement("div");
+                        newDiv.className = "col-md-6 mb-4";
+                        let card = document.createElement("div");
+                        card.className = "card";
+                        let cardBody = document.createElement("div");
+                        cardBody.className = "card-body";
+
+                        let title = document.createElement("h5");
+                        title.className = "card-title";
+                        title.innerHTML = (i + 1) + "번째 질문";
+
+                        let q = document.createElement("p");
+                        q.className = "card-text";
+                        q.innerHTML = "<strong>질문:</strong> " + questions[i];
+
+                        let a = document.createElement("p");
+                        a.className = "card-text";
+                        a.innerHTML = "<strong>대답:</strong> " + answers[i];
+
+                        let anal = document.createElement("p");
+                        anal.className = "card-text";
+                        anal.setAttribute('id', 'anal' + i);
+                        anal.style.whiteSpace = "pre-wrap";
+
+                        cardBody.appendChild(title);
+                        cardBody.appendChild(q);
+                        cardBody.appendChild(a);
+                        cardBody.appendChild(anal);
+                        card.appendChild(cardBody);
+                        newDiv.appendChild(card);
+                        parent.appendChild(newDiv);
+                  }
+
+                  for (let i = 0; i < count; i++) {
+                        
+                        let anal = document.getElementById('anal' + i);
+                        fetch('/analysis-answer?currentCount='+i, { method: 'POST' })
+                              .then(response => response.text())
+                              .then(analysis => {
+                                    anal.innerHTML = "<strong>분석:</strong><br> " + analysis;
+                                    readyCount += 1;
+                                    console.log(analysis)
+                                    if (readyCount == count) {
+                                          answerAnalysisReady = true;
+                                    }
+                              });
+                        console.log('1초 쉬기 전');
+                        setTimeout(() => {
+                              console.log('1초 쉬기 후');
+                        }, 3000);
+                  }
+
+                  // 동시에 비디오도 분석
+                  fetch('/analysis-Video', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                              const mp4Analysis = data.mp4Analysis;
+                              const final_comfort_ratio = data.final_comfort_ratio;
+                              const final_uncomfort_ratio = data.final_uncomfort_ratio;
+                              const final_hand_ratio = data.final_hand_ratio;
+                              const final_face_ratio = data.final_face_ratio;
+                              const final_head_ratio = data.final_head_ratio;
+                              const final_arm_ratio = data.final_arm_ratio;
+                              const final_shoulder_ratio = data.final_shoulder_ratio;
+                              const final_handtouch_ratio = data.final_handtouch_ratio;
+
+                              sessionStorage.setItem("videoAnalysisResult", mp4Analysis);
+                              sessionStorage.setItem("final_comfort_ratio", final_comfort_ratio);
+                              sessionStorage.setItem("final_uncomfort_ratio", final_uncomfort_ratio);
+                              sessionStorage.setItem("final_hand_ratio", final_hand_ratio);
+                              sessionStorage.setItem("final_face_ratio", final_face_ratio);
+                              sessionStorage.setItem("final_head_ratio", final_head_ratio);
+                              sessionStorage.setItem("final_arm_ratio", final_arm_ratio);
+                              sessionStorage.setItem("final_shoulder_ratio", final_shoulder_ratio);
+                              sessionStorage.setItem("final_handtouch_ratio", final_handtouch_ratio);
+
+                              videoAnalysisReady = true;
+                        });
+
+                  function checkReady() {
+                        if (videoAnalysisReady && answerAnalysisReady) {
+                              document.querySelector('.loader').style.display = 'none';
+                              document.getElementById('parent').style.display = 'block';
+                              nextVideo.style.display = 'block';
+                              clearInterval(checkInterval);  // 확인 중단
+                        }
+                  }
+
+                  let checkInterval = setInterval(checkReady, 100);
+            }
+            window.onload = reset;
+      </script>
+</body>
+
+</html>
