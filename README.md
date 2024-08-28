@@ -1,18 +1,18 @@
 # AI 면접 코칭 서비스
 한성대학교 상상더학기 진로학점제
 
-<br><br><br>
+<br><br>
 
 ## Language
-Python
+Python<br>
 Django HTML
 <br><br><br>
 
 ## Tech Stack
-Google Mediapipe
-Google Speech to Text
-Google Cloud Vision
-Open AI Chat-GPT Prompt Tuning
+Google Mediapipe<br>
+Google Speech to Text<br>
+Google Cloud Vision<br>
+Open AI Chat-GPT Prompt Tuning<br>
 SVM 모델
 <br><br><br>
 
